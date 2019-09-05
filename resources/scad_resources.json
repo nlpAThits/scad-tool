@@ -1,7 +1,7 @@
 { 
     
-    "token_zbmath_idf_path" : "../resources/zbmath/zbmath-titles.txt.plain.token.idf",  
-    "stem_zbmath_idf_path"  : "../resources/zbmath/zbmath-titles.txt.plain.stem.idf",  
+    "__token_zbmath_idf_path" : "../resources/zbmath/zbmath-titles.txt.plain.token.idf",  
+    "__stem_zbmath_idf_path"  : "../resources/zbmath/zbmath-titles.txt.plain.stem.idf",  
     "stem_dblp_idf_path"    : "../resources/dblp/dblp-titles.txt.plain.stem.idf", 
     "token_dblp_idf_path"   : "../resources/dblp/dblp-titles.txt.plain.token.idf",
 
