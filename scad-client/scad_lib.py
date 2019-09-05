@@ -1,11 +1,10 @@
 from operator import itemgetter
 import numpy as np
 from numpy import string_
-import os, json
+import os, json, re
 import sklearn.preprocessing as sk
-import matplotlib.pyplot as plt
-import seaborn as sb
-import re
+#import matplotlib.pyplot as plt
+#import seaborn as sb
 
 # Compare two names according to 'matching_method' and return true or false. Supports only 'match:ATTRIBUTE' so far.
 def matches(auth1, auth2, matching_method="", case_sensitive=False):
