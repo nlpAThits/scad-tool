@@ -1,0 +1,38 @@
+{ 
+  "global_lang" : "english", 
+  "data_type"   : "UNKNOWN", 
+  "connector"   : "or", 
+  "methods": 
+   [
+     { "__method_name"      : "unit_overlap",
+              "unit"      : "stem", 
+              "fold"      : true, 
+              "threshold" : 3.0 },
+              
+     { "__method_name"     : "local_coauthor_similarity", 
+            "scheme"      : "shortname", 
+            "match"       : "binary", 
+            "measure"     : "overlap", 
+            "threshold"   : 1.0 },
+            
+     { "__method_name"      : "cos_of_avg", 
+             "emb"       : "algo:sg;dataset:dblp;dims:200;fold:1;iters:10;mc:50;neg:5;norm:abtt;rnd:1;unit:stem;win:10",
+              "tf"        : false, 
+              "idf"       : false,            
+              "unit"      : "stem", 
+              "fold"      : true, 
+              "threshold" : 0.55 },
+
+     { "method_name" : "avg_of_cos", 
+                              "emb"        : "algo:sg;dataset:dblp;dims:200;fold:1;iters:10;mc:50;neg:5;norm:none;rnd:1;unit:stem;win:10",
+                              "_emb"       : "algo:sg;dataset:dblp;dims:200;fold:1;iters:10;mc:50;neg:5;norm:abtt;rnd:1;unit:stem;win:10",                              
+                              "tf"          : false, 
+                              "idf"         : false, 
+                              "top_n"       : 3, 
+                              "unit"        : "stem",
+                              "fold"        : true,
+                              "threshold"   : 0.9 }
+   ]
+}
+
+

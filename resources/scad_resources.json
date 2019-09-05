@@ -1,0 +1,14 @@
+{ 
+    
+    "token_zbmath_idf_path" : "../resources/zbmath/zbmath-titles.txt.plain.token.idf",  
+    "stem_zbmath_idf_path"  : "../resources/zbmath/zbmath-titles.txt.plain.stem.idf",  
+    "stem_dblp_idf_path"    : "../resources/dblp/dblp-titles.txt.plain.stem.idf", 
+    "token_dblp_idf_path"   : "../resources/dblp/dblp-titles.txt.plain.token.idf",
+
+    "wombat_path"           : "/data/nlp/muellemh/GOLDENEMBEDDINGS/",
+    "__wombat_path"           : "/media/mark-christoph/MCM/wombatdata/",  
+    "english_stemmer"       : "yes", 
+    "english_pretokenizer"  : "yes", 
+    "english_stopwords"     : "yes" 
+}
+
