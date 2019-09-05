@@ -5,8 +5,7 @@
     "stem_dblp_idf_path"    : "../resources/dblp/dblp-titles.txt.plain.stem.idf", 
     "token_dblp_idf_path"   : "../resources/dblp/dblp-titles.txt.plain.token.idf",
 
-    "wombat_path"           : "/data/nlp/muellemh/GOLDENEMBEDDINGS/",
-    "__wombat_path"           : "/media/mark-christoph/MCM/wombatdata/",  
+    "wombat_path"           : "../resources/wombat/",
     "english_stemmer"       : "yes", 
     "english_pretokenizer"  : "yes", 
     "english_stopwords"     : "yes" 
