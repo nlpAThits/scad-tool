@@ -49,7 +49,7 @@ $ python scad-client/run_simple_scad_client.py \
    --blocking_pattern "'name': '(a[^\']* smith)'" \
    --name_matching_method match:shortname \
    --paramfile resources/scad_params.json \
-   --resourcefile resources/scad_resources.json \   
+   --resourcefile resources/scad_resources.json \
    --evaluate
 
 ```
