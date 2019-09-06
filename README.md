@@ -30,8 +30,14 @@ $ unzip 'resources/wombat/*.zip'
 $ python scad-server/app.py localhost 50001 &
 
 ```  
-
 </p>
+This will start the server in the background and return a PID that can be used in 
+
+```shell
+$ kill PID
+
+```  
+to stop the server.
 
 
 
