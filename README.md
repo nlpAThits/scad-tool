@@ -1,5 +1,7 @@
 # scad-tool
-Code and resources for the Author Name Disambiguation (AND) tool developed in the Scalable Author Disambiguation (SCAD) project
+Code and resources for the Author Name Disambiguation (AND) tool developed in the Scalable Author Disambiguation (SCAD) project.
+
+Currently under construction!
 
 <h3>Setup</h3>
 
@@ -55,4 +57,4 @@ $ python scad-client/run_simple_scad_client.py \
 
 ```
 
-The matching methods to use are specified in ```resources/scad_params.json``` (excerpt):
+The matching methods to use are specified in ```resources/scad_params.json```.
