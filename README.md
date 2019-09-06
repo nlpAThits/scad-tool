@@ -43,6 +43,13 @@ to stop the server.
 This project includes a simple Python client which processes a JSON file and disambiguates it by making API calls against the SCAD server.
 
 ```shell
-$ python run_simple_scad_client.py  --pubfile ../publicationdata/full-kisti-plain-sng-sorted.json --scad_url http://localhost:50001 --name_matching_method match:shortname  --paramfile ../resources/scad_params.json --resourcefile ../resources/scad_resources.json  --blocking_pattern "'name': '(a[^\']* smith)'" --evaluate
+$ python scad-client/run_simple_scad_client.py  
+   --pubfile publicationdata/full-kisti-plain-sng-sorted.json 
+   --scad_url http://localhost:50001 
+   --name_matching_method match:shortname  
+   --paramfile resources/scad_params.json 
+   --resourcefile resources/scad_resources.json  
+   --blocking_pattern "'name': '(a[^\']* smith)'" 
+   --evaluate
 
 ```
