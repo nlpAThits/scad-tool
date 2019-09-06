@@ -21,6 +21,7 @@ $ unzip 'resources/wombat/*.zip'
 </p>
 
 <h3>Starting the SCAD server</h3>
+The following will start an instance of the SCAD server on the local machine on port 50001.
 
 <p>
   
@@ -29,10 +30,14 @@ $ python scad-server/app.py localhost 50001 &
 
 ```  
 </p>
-This will start the server in the background and return a PID that can be used in 
+The above will start the server in the background and return a PID that can be used in 
 
 ```shell
 $ kill PID
 
 ```  
 to stop the server.
+
+
+<h3>Starting the demo SCAD client</h3>
+This project includes a simple Python client which processes a JSON file and disambiguates it by making API calls against the SCAD server.
