@@ -24,8 +24,9 @@
               "threshold" : 0.55 },
 
      { "method_name" : "avg_of_cos", 
-                              "emb"        : "algo:sg;dataset:dblp;dims:200;fold:1;iters:10;mc:50;neg:5;norm:none;rnd:1;unit:stem;win:10",
-                              "_emb"       : "algo:sg;dataset:dblp;dims:200;fold:1;iters:10;mc:50;neg:5;norm:abtt;rnd:1;unit:stem;win:10",                              
+                              "__emb"          : "algo:glove;dataset:6b;dims:50;fold:1;unit:token",
+                              "__emb"          : "algo:sg;dataset:dblp;dims:200;fold:1;iters:20;mc:5;neg:20;phrases:no;unit:stem;w:5",
+                              "emb"          : "algo:sg;dataset:dblp;dims:200;fold:1;iters:10;mc:50;neg:5;norm:none;rnd:1;unit:stem;win:10",
                               "tf"          : false, 
                               "idf"         : false, 
                               "top_n"       : 3, 
