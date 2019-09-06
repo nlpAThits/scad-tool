@@ -1,8 +1,6 @@
 # scad-tool
 Code and resources for the Author Name Disambiguation (AND) tool developed in the Scalable Author Disambiguation (SCAD) project
 
-** Currently under construction for TPDL 2019 ***
-
 <h3>Setup</h3>
 
 <p>
@@ -38,6 +36,3 @@ $ kill PID
 
 ```  
 to stop the server.
-
-
-
