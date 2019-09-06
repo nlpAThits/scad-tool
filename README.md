@@ -41,6 +41,7 @@ to stop the server.
 
 <h3>Starting the demo SCAD client</h3>
 This project includes a simple Python client which processes a JSON file and disambiguates it by making API calls against the SCAD server.
+The following will process publications belonging to the block <b>a smith</b> from the KISTI corpus, using the semantic matching method avg_of_cos with a dblp-trained word2vec resource (cf. below):
 
 ```shell
 $ python scad-client/run_simple_scad_client.py \
