@@ -15,7 +15,7 @@ $ source activate scad-env
 $ pip install -r scad-requirements-wo-wombat.txt 
 $ git clone https://github.com/nlpAThits/WOMBAT.git
 $ pip install WOMBAT/.
-$ unzip 'resources/wombat/*.zip'
+$ unzip 'resources/wombat/*.zip' -d resources/wombat/
 ```
 
 </p>
