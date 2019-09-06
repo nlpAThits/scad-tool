@@ -27,7 +27,7 @@ $ unzip 'resources/wombat/*.zip'
 <p>
   
 ```shell
-$ python scad-server/app.py localhost 50001
+$ python scad-server/app.py localhost 50001 &
 
 ```  
 
