@@ -3,7 +3,7 @@ Code and resources for the Author Name Disambiguation (AND) tool developed in th
 
 ** Currently under construction for TPDL 2019 ***
 
-<h3>Installation:</h3>
+<h3>Setup</h3>
 
 <p>
 
@@ -22,7 +22,17 @@ $ unzip 'resources/wombat/*.zip'
 
 </p>
 
+<h3>Starting the SCAD server</h3>
 
+<p>
+  
+```shell
+  
+$ python scad-server/app.py localohost 50001
+
+```  
+
+</p>
 
 
 
