@@ -54,3 +54,5 @@ $ python scad-client/run_simple_scad_client.py \
    --evaluate
 
 ```
+
+The matching methods to use are specified in ```resources/scad_params.json``` (excerpt):
