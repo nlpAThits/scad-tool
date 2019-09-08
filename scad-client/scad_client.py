@@ -1,6 +1,6 @@
 import time, json, re, requests, logging, sys, os, itertools
 from collections import Counter
-from scad_lib import matches, get_gold_label, log_printable_string, bin_eval
+from scad_lib import matches, get_gold_label, log_printable_string, bin_eval,  evaluate_conll
 from tqdm import tqdm
 
 class simple_scad_client(object):
@@ -93,6 +93,9 @@ class simple_scad_client(object):
             
         pat = ".*"+self.blocking_pattern+".*"
         
+        matches_as_edges=[]
+        gold_clusters={}
+        gold_ids=[]
         for e, pub_1 in enumerate(self.pub_list):
             for pub_2 in self.pub_list[e+1:]:
                 if not self.verbose: bar.update(1)
@@ -114,18 +117,40 @@ class simple_scad_client(object):
                                               [(e,p) for e,p in enumerate(pub_2['authors']) if re.match(pat, str(p), re.IGNORECASE) != None]):
                     auth1=tup[0][1]
                     auth2=tup[1][1]
+                    
                     if matches(auth1, auth2, matching_method=name_matching_method, case_sensitive=False):
+                        # If auth1 is identified, get its cluster no and add to gold_clusters, else do not add to gold_clusters
+                        if auth1['id'] != "":
+                            if auth1['id'] not in gold_ids:
+                                gold_ids.append(auth1['id'])                         
+                            gold_clusters[pub_1['id']+"@"+str(tup[0][0])]=gold_ids.index(auth1['id'])
+
+                        # If auth2 is identified, get its cluster no and add to gold_clusters, else do not add to gold_clusters
+                        if auth2['id'] != "":
+                            if auth2['id'] not in gold_ids:
+                                gold_ids.append(auth2['id'])                         
+                            gold_clusters[pub_2['id']+"@"+str(tup[1][0])]=gold_ids.index(auth2['id'])
+
+                        # gold_clusters contains all identified records, including singletons 
                         record_comparisons+=1
                         if evaluate : self.params['gold_label'] = get_gold_label(auth1['id'], auth2['id'])
                         else        : self.params['gold_label'] = 'UNK'
 
                         result = json.loads(requests.post(self.scad_server_url+'/scad_api', json = {'pub_1':pub_1, 'ai_1':tup[0][0], 'pub_2':pub_2, 'ai_2':tup[1][0], 'params':self.params}).text)
+                        
+                        # Create result edge for later clustering.
+                        # Consider only pairs that *can* actually be evaluated.
+                        if result[0]['sys_label'] == "T" and auth1['id'] != "" and auth2['id'] != "":
+                            matches_as_edges.append((pub_1['id']+"@"+str(tup[0][0]),pub_2['id']+"@"+str(tup[1][0])))
+
                         # Update counter for TP, FP etc.
                         pair_results[result[0]['bin_class']]+=1
                         log_printable_string(self.logger, pub_1, tup[0][0], pub_2, tup[1][0], result, name_attribute='shortname', only_show=[], suppress=['NCL','NID'])
         if not self.verbose:  
             bar.close()
-        
+
+        bc_p,bc_r,bc_f = evaluate_conll(matches_as_edges, gold_clusters, "test", "./reference-coreference-scorers/scorer.pl")
+#        print("B-CUB P: %s R: %s F: %s"%(p,r,f))
         bin_result = bin_eval(pair_results)
         ms = "Used methods:\n"
         for m in self.params['methods']:
@@ -135,6 +160,7 @@ class simple_scad_client(object):
         self.logger.info("%s\tpublication pairs were skipped (duplicates)!"%(str(skipped)))
         self.logger.info("%s\tambiguous record pairs were not classified (lack of evidence)!"%(str(bin_result['ncl'])))
         if evaluate:
+            self.logger.info("\n\t*B-CUBED* clustering evaluation\n\tP:\t%s\n\tR:\t%s\n\tF:\t%s\n\t"%(bc_p, bc_r, bc_f))
             self.logger.info("\n\t*Binary* classification evaluation\n\tP:\t%s\n\tR:\t%s\n\tF:\t%s\n\t(TP: %s, FP: %s, TN: %s, FN: %s)"%(bin_result['p'], bin_result['r'], bin_result['f'], bin_result['tp'],bin_result['fp'],bin_result['tn'],bin_result['fn']))
             self.logger.info("\t%s ambiguous record pairs were ignored for evaluation because at least one author had no gold id!"%(str(bin_result['nid'])))
 
@@ -143,6 +169,7 @@ class simple_scad_client(object):
             print("%s\tpublication pairs were skipped (duplicates)!"%(str(skipped)))
             print("%s\tambiguous record pairs were not classified (lack of evidence)!"%(str(bin_result['ncl'])))
             if evaluate:
+                print("\n\t*B-CUBED* clustering evaluation\n\tP:\t%s\n\tR:\t%s\n\tF:\t%s"%(bc_p, bc_r, bc_f))
                 print("\n\t*Binary* classification evaluation")
                 print("\tP:\t%s\n\tR:\t%s\n\tF:\t%s\n\t(TP: %s, FP: %s, TN: %s, FN: %s)"%(bin_result['p'], bin_result['r'], bin_result['f'], bin_result['tp'],bin_result['fp'],bin_result['tn'],bin_result['fn']))
                 print("\t%s ambiguous record pairs were ignored for evaluation because at least one author had no gold id!"%(str(bin_result['nid'])))

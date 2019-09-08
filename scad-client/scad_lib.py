@@ -1,8 +1,9 @@
 from operator import itemgetter
 import numpy as np
 from numpy import string_
-import os, json, re
+import os, json, re, subprocess
 import sklearn.preprocessing as sk
+import networkx as nx
 #import matplotlib.pyplot as plt
 #import seaborn as sb
 
@@ -18,6 +19,44 @@ def matches(auth1, auth2, matching_method="", case_sensitive=False):
             if auth1[att] == auth2[att]:
                 r = True
     return r
+
+def evaluate_conll(sys_matches, gold_clusters, name, conll_exe_path, measure_name="bcub"):
+    sys_clusters={}
+    g = nx.Graph()
+    g.add_edges_from(sys_matches)
+    for cid, c in enumerate(nx.connected_components(g)):
+        for p in c:
+            sys_clusters[p]=cid
+            
+            
+    # sys_matches might miss clusters that were not found (actual R error), and singleton clusters that *could not* be found
+    # Make sure sys and gold clusters are aligned, by adding all undetected gold_clusters as singletons to sys
+    for gc in gold_clusters:
+        if gc not in sys_clusters:
+            cid+=1
+            sys_clusters[gc]=cid
+    
+    sys_path=records_to_conll(sys_clusters, "./", "sys_"+name)
+    gold_path=records_to_conll(gold_clusters, "./", "gold_"+name)
+
+    params=[conll_exe_path, measure_name, gold_path, sys_path]
+    result_parts = subprocess.check_output(params).decode("utf-8").split('\n')
+    result_line_parts = result_parts[len(result_parts)-3].split('\t')
+    return result_line_parts[1].split(' ')[-1].split('%')[0], result_line_parts[0].split(' ')[-1].split('%')[0],  result_line_parts[2].split(' ')[-1].split('%')[0]
+
+
+
+# input dic is a dict with 'pubid@pos' as key and author_num as value
+# 'conf/isaac/KloksB92:1': 4711
+def records_to_conll(dic, path, name):# , global_key_file=None, global_response_file=None, suppress_unidentified=True):
+    full_name=path+name+"_author_id"+".conll"
+    with open(full_name,'w') as conll_file:    
+        conll_file.write("#begin document (dummy)\n")
+        for pub in sorted(list(dic.keys())):   # Sort for comparability
+            conll_file.write(pub+"\t0\t0\tjunk\t("+str(dic[pub])+")\n")
+        conll_file.write("#end document")     
+    return full_name
+
 
 # Compute binary p,r, and f values from dictionary of TP etc. counts
 def bin_eval(rec):
