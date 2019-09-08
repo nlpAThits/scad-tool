@@ -17,6 +17,7 @@ $ source activate scad-env
 $ pip install -r scad-requirements-wo-wombat.txt 
 $ git clone https://github.com/nlpAThits/WOMBAT.git
 $ pip install WOMBAT/.
+$ git clone https://github.com/conll/reference-coreference-scorers.git
 $ unzip 'resources/wombat/*.zip' -d resources/wombat/
 ```
 
