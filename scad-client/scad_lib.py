@@ -4,8 +4,31 @@ from numpy import string_
 import os, json, re, subprocess
 import sklearn.preprocessing as sk
 import networkx as nx
-#import matplotlib.pyplot as plt
+from pyvis.network import Network
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 #import seaborn as sb
+
+
+def make_pub_html(pub, ai, name_attribute='shortname'):
+    a_temp,a_temp_plain="",""
+    for i,a in enumerate(pub['authors']):
+        if i == ai:
+            a_temp=a_temp+" <b>"+a[name_attribute]+"</b>; "
+            a_temp_plain=a_temp_plain+" *"+a[name_attribute]+"*; "
+        else:
+            a_temp=a_temp+" "+a[name_attribute]+"; "
+            a_temp_plain=a_temp_plain+" "+a[name_attribute]+"; "
+    out="<html><body><table>"
+    plain_out=pub['id']+"\n"
+    out=out+"<tr><td><font size='1'>"+pub['id']+"</font></td></tr>"
+    plain_out=plain_out+pub['title']+"\n"
+    out=out+"<tr><td><font size='1'>"+pub['title']+"</font></td></tr>"
+    plain_out=plain_out+a_temp_plain
+    out=out+"<tr><td><font size='1'>"+a_temp+"</font></td></tr>" 
+    out=out+"</table></body></html>"
+    return out, plain_out
+    
 
 # Compare two names according to 'matching_method' and return true or false. Supports only 'match:ATTRIBUTE' so far.
 def matches(auth1, auth2, matching_method="", case_sensitive=False):
@@ -20,20 +43,36 @@ def matches(auth1, auth2, matching_method="", case_sensitive=False):
                 r = True
     return r
 
-def evaluate_conll(sys_matches, gold_clusters, name, conll_exe_path, measure_name="bcub"):
+
+def plot_graph(gold_nodes, sys_edges, nodedata_html, nodedata_plain, filename):
+    cm = plt.cm.get_cmap('Set1')
+    pvg = Network(height='100%', width='100%')
+    for n in gold_nodes.keys():
+        pvg.add_node(n, mass=2, shadow=True, font="4 courier black", label=str(gold_nodes[n])+"\n"+nodedata_plain[n], shape='box', color=mpl.colors.to_hex(cm.colors[ divmod(gold_nodes[n],len(cm.colors))[1]]   ))
+    for f,t,d in sys_edges:
+        pvg.add_edge(f, t, label=d['ev'], font='4 courier black')
+    pvg.toggle_physics(True)
+    pvg.show(filename+".html")
+
+
+
+def evaluate_conll(sys_matches, gold_clusters, name, conll_exe_path, measure_name="bcub", conservative=True):
     sys_clusters={}
     g = nx.Graph()
     g.add_edges_from(sys_matches)
+    cid=0
     for cid, c in enumerate(nx.connected_components(g)):
         for p in c:
             sys_clusters[p]=cid
-            
-            
+                        
     # sys_matches might miss clusters that were not found (actual R error), and singleton clusters that *could not* be found
     # Make sure sys and gold clusters are aligned, by adding all undetected gold_clusters as singletons to sys
+    # This is the *conservative* default; the *aggressive* default would *merge* all undetected gold_clusters into sys as one 
+#    cid+=1
     for gc in gold_clusters:
         if gc not in sys_clusters:
-            cid+=1
+            if conservative:     
+                cid+=1
             sys_clusters[gc]=cid
     
     sys_path=records_to_conll(sys_clusters, "./", "sys_"+name)
@@ -42,7 +81,7 @@ def evaluate_conll(sys_matches, gold_clusters, name, conll_exe_path, measure_nam
     params=[conll_exe_path, measure_name, gold_path, sys_path]
     result_parts = subprocess.check_output(params).decode("utf-8").split('\n')
     result_line_parts = result_parts[len(result_parts)-3].split('\t')
-    return result_line_parts[1].split(' ')[-1].split('%')[0], result_line_parts[0].split(' ')[-1].split('%')[0],  result_line_parts[2].split(' ')[-1].split('%')[0]
+    return result_line_parts[1].split(' ')[-1].split('%')[0], result_line_parts[0].split(' ')[-1].split('%')[0],  result_line_parts[2].split(' ')[-1].split('%')[0], sys_clusters
 
 
 

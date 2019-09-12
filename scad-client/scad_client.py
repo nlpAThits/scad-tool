@@ -1,6 +1,6 @@
 import time, json, re, requests, logging, sys, os, itertools
 from collections import Counter
-from scad_lib import matches, get_gold_label, log_printable_string, bin_eval,  evaluate_conll
+from scad_lib import matches, get_gold_label, log_printable_string, bin_eval,  evaluate_conll, plot_graph, make_pub_html
 from tqdm import tqdm
 
 class simple_scad_client(object):
@@ -13,23 +13,24 @@ class simple_scad_client(object):
     scad_server_url   = ""
     params            = {}
     blocking_pattern  = ""
+    logfilename       = ""
 
     def __init__(self, scad_server_url="", logfile="", verbose=False):
 
         if logfile == "":
-            logfilename = "./log/scad_log_"+str(os.getpid())+".txt"
+            self.logfilename = "./log/scad_log_"+str(os.getpid())+".txt"
         else:
-            logfilename=logfile
-        os.makedirs(os.path.dirname(logfilename), exist_ok=True)
+            self.logfilename=logfile
+        os.makedirs(os.path.dirname(self.logfilename), exist_ok=True)
 
         # Default: Do not overwrite log
-        logging.basicConfig(filename=logfilename, filemode='a', level=logging.INFO, format='%(asctime)s %(message)s')
+        logging.basicConfig(filename=self.logfilename, filemode='a', level=logging.INFO, format='%(asctime)s %(message)s')
         self.logger = logging.getLogger()
         self.verbose = verbose
         if verbose:
             self.logger.addHandler(logging.StreamHandler(sys.stderr))
         self.scad_server_url = scad_server_url
-        self.logger.info("Created simple_scad_client for communication with server at %s, logging to %s"%(scad_server_url, logfilename))
+        self.logger.info("Created simple_scad_client for communication with server at %s, logging to %s"%(scad_server_url, self.logfilename))
 
 
     def load_publications(self, pub_file_name="", blocking_pattern=""):
@@ -87,15 +88,16 @@ class simple_scad_client(object):
     def match_publications(self, evaluate=False, name_matching_method=""):
         pub_comparisons, record_comparisons, skipped  = 0, 0, 0        
         pair_results = {'TP':0, 'FP':0, 'FN':0, 'TN':0, 'NID':0, 'NCL':0, 'UNK':0}      
+        pubdata_html,pubdata_plain={},{}  
           
         if not self.verbose: 
             bar = tqdm(total=int((len(self.pub_list)*(len(self.pub_list)-1))/2), ncols=80)
             
         pat = ".*"+self.blocking_pattern+".*"
         
-        matches_as_edges=[]
+        sys_match_pairs=[]
         gold_clusters={}
-        gold_ids=[]
+        gold_ids=[]         # For creating numerical values for author ids
         for e, pub_1 in enumerate(self.pub_list):
             for pub_2 in self.pub_list[e+1:]:
                 if not self.verbose: bar.update(1)
@@ -118,17 +120,23 @@ class simple_scad_client(object):
                     auth1=tup[0][1]
                     auth2=tup[1][1]
                     
+                    # Check if current rec pair is ambiguous at all.
                     if matches(auth1, auth2, matching_method=name_matching_method, case_sensitive=False):
+                        pubdata_html[pub_1['id']+"@"+str(tup[0][0])], pubdata_plain[pub_1['id']+"@"+str(tup[0][0])] = make_pub_html(pub_1, tup[0][0], "shortname")
+                        pubdata_html[pub_2['id']+"@"+str(tup[1][0])], pubdata_plain[pub_2['id']+"@"+str(tup[1][0])] = make_pub_html(pub_2, tup[1][0], "shortname")
+                        
                         # If auth1 is identified, get its cluster no and add to gold_clusters, else do not add to gold_clusters
                         if auth1['id'] != "":
                             if auth1['id'] not in gold_ids:
-                                gold_ids.append(auth1['id'])                         
+                                gold_ids.append(auth1['id'])
+                            # Create mapping from current pub1+auth1 id to numerical id of auth1
                             gold_clusters[pub_1['id']+"@"+str(tup[0][0])]=gold_ids.index(auth1['id'])
 
                         # If auth2 is identified, get its cluster no and add to gold_clusters, else do not add to gold_clusters
                         if auth2['id'] != "":
                             if auth2['id'] not in gold_ids:
-                                gold_ids.append(auth2['id'])                         
+                                gold_ids.append(auth2['id'])
+                            # Create mapping from current pub2+auth2 id to numerical id of auth2                                                         
                             gold_clusters[pub_2['id']+"@"+str(tup[1][0])]=gold_ids.index(auth2['id'])
 
                         # gold_clusters contains all identified records, including singletons 
@@ -137,20 +145,26 @@ class simple_scad_client(object):
                         else        : self.params['gold_label'] = 'UNK'
 
                         result = json.loads(requests.post(self.scad_server_url+'/scad_api', json = {'pub_1':pub_1, 'ai_1':tup[0][0], 'pub_2':pub_2, 'ai_2':tup[1][0], 'params':self.params}).text)
-                        
+                        ev=""
+                        for n in result[1]:
+                            ev=ev+str(n[0])+":"+str(n[3])+"\n"
                         # Create result edge for later clustering.
                         # Consider only pairs that *can* actually be evaluated.
                         if result[0]['sys_label'] == "T" and auth1['id'] != "" and auth2['id'] != "":
-                            matches_as_edges.append((pub_1['id']+"@"+str(tup[0][0]),pub_2['id']+"@"+str(tup[1][0])))
-
+                            sys_match_pairs.append((pub_1['id']+"@"+str(tup[0][0]),pub_2['id']+"@"+str(tup[1][0]), {'ev':ev} ))
                         # Update counter for TP, FP etc.
                         pair_results[result[0]['bin_class']]+=1
                         log_printable_string(self.logger, pub_1, tup[0][0], pub_2, tup[1][0], result, name_attribute='shortname', only_show=[], suppress=['NCL','NID'])
         if not self.verbose:  
             bar.close()
 
-        bc_p,bc_r,bc_f = evaluate_conll(matches_as_edges, gold_clusters, "test", "./reference-coreference-scorers/scorer.pl")
-#        print("B-CUB P: %s R: %s F: %s"%(p,r,f))
+        # conservative = True will  add missing gold nodes as singletons, preserving precision. 
+        # conservative = False will add missing gold nodes as one huge cluster, favoring recall at the expense of precision
+        # sys_clusters will also contain those nodes from gold that were identified by id, but that were not found by the system.
+        bc_p, bc_r, bc_f, sys_clusters = evaluate_conll(sys_match_pairs, gold_clusters, "test", "./reference-coreference-scorers/scorer.pl", conservative=True)
+        # sys_clusters contains all nodes to plot (incl. gold), sys_match_pairs the pairs that were matched by the system
+        plot_graph(sys_clusters, sys_match_pairs, pubdata_html, pubdata_plain, self.logfilename)
+        
         bin_result = bin_eval(pair_results)
         ms = "Used methods:\n"
         for m in self.params['methods']:
