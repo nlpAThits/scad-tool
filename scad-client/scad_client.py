@@ -1,6 +1,6 @@
 import time, json, re, requests, logging, sys, os, itertools
 from collections import Counter
-from scad_lib import matches, get_gold_label, log_printable_string, bin_eval,  evaluate_conll, plot_graph, make_pub_html
+from scad_lib import matches, get_gold_label, log_printable_string, bin_eval,  evaluate_conll, plot_graph, make_pub_html, make_evidence_label
 from tqdm import tqdm
 
 class simple_scad_client(object):
@@ -145,9 +145,7 @@ class simple_scad_client(object):
                         else        : self.params['gold_label'] = 'UNK'
 
                         result = json.loads(requests.post(self.scad_server_url+'/scad_api', json = {'pub_1':pub_1, 'ai_1':tup[0][0], 'pub_2':pub_2, 'ai_2':tup[1][0], 'params':self.params}).text)
-                        ev=""
-                        for n in result[1]:
-                            ev=ev+str(n[0])+":"+str(n[3])+"\n"
+                        ev=make_evidence_label(result[1])
                         # Create result edge for later clustering.
                         # Consider only pairs that *can* actually be evaluated.
                         if result[0]['sys_label'] == "T" and auth1['id'] != "" and auth2['id'] != "":

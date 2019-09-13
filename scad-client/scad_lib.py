@@ -7,28 +7,41 @@ import networkx as nx
 from pyvis.network import Network
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-#import seaborn as sb
+from textwrap import wrap
 
+
+def make_evidence_label(d):
+    for n in d:
+        if n[0]=="avg_of_cos":
+            ev="avg_of_cos: "+'{:{width}.{prec}f}'.format(n[3], width=4, prec=4)+"\n"
+            for p in n[5][2:-2].split("), ("):
+                pair,score=p.split(",")
+                ev=ev+pair[1:-1]+': {:{width}.{prec}f}'.format(float(score), width=4, prec=4)+"\n"
+    return ev
 
 def make_pub_html(pub, ai, name_attribute='shortname'):
     a_temp,a_temp_plain="",""
     for i,a in enumerate(pub['authors']):
         if i == ai:
-            a_temp=a_temp+" <b>"+a[name_attribute]+"</b>; "
+#            a_temp=a_temp+" <b>"+a[name_attribute]+"</b>; "
             a_temp_plain=a_temp_plain+" *"+a[name_attribute]+"*; "
         else:
-            a_temp=a_temp+" "+a[name_attribute]+"; "
+#            a_temp=a_temp+" "+a[name_attribute]+"; "
             a_temp_plain=a_temp_plain+" "+a[name_attribute]+"; "
-    out="<html><body><table>"
-    plain_out=pub['id']+"\n"
-    out=out+"<tr><td><font size='1'>"+pub['id']+"</font></td></tr>"
-    plain_out=plain_out+pub['title']+"\n"
-    out=out+"<tr><td><font size='1'>"+pub['title']+"</font></td></tr>"
-    plain_out=plain_out+a_temp_plain
-    out=out+"<tr><td><font size='1'>"+a_temp+"</font></td></tr>" 
-    out=out+"</table></body></html>"
-    return out, plain_out
+#    out="<html><body><table>"
+    plain_out=pub['id']+"\n\n"
+#    out=out+"<tr><td><font size='1'>"+pub['id']+"</font></td></tr>"
+    title="\n".join(wrap(pub['title'], 60))
+    authors="\n".join(wrap(a_temp_plain, 60))
+
+    plain_out=plain_out+title+"\n\n"
+#    out=out+"<tr><td><font size='1'>"+pub['title']+"</font></td></tr>"
+    plain_out=plain_out+authors
+#    out=out+"<tr><td><font size='1'>"+a_temp+"</font></td></tr>" 
+#    out=out+"</table></body></html>"
+    return "", plain_out
     
+
 
 # Compare two names according to 'matching_method' and return true or false. Supports only 'match:ATTRIBUTE' so far.
 def matches(auth1, auth2, matching_method="", case_sensitive=False):
@@ -46,11 +59,11 @@ def matches(auth1, auth2, matching_method="", case_sensitive=False):
 
 def plot_graph(gold_nodes, sys_edges, nodedata_html, nodedata_plain, filename):
     cm = plt.cm.get_cmap('Set1')
-    pvg = Network(height='100%', width='100%')
+    pvg = Network(height='100%', width='100%', layout=False)
     for n in gold_nodes.keys():
-        pvg.add_node(n, mass=2, shadow=True, font="4 courier black", label=str(gold_nodes[n])+"\n"+nodedata_plain[n], shape='box', color=mpl.colors.to_hex(cm.colors[ divmod(gold_nodes[n],len(cm.colors))[1]]   ))
+        pvg.add_node(n, mass=2, shape='box', shadow=True, font="4 courier black", label=str(gold_nodes[n])+"\n"+nodedata_plain[n], color=mpl.colors.to_hex(cm.colors[ divmod(gold_nodes[n],len(cm.colors))[1]]   ))
     for f,t,d in sys_edges:
-        pvg.add_edge(f, t, label=d['ev'], font='4 courier black')
+        pvg.add_edge(f, t, label=d['ev'], font="4 courier black")
     pvg.toggle_physics(True)
     pvg.show(filename+".html")
 
