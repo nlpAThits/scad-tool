@@ -60,4 +60,4 @@ $ python scad-client/run_simple_scad_client.py \
 
 The matching methods to use are specified in ```resources/scad_params.json```.
 
-Visualized example results can be found at [https://nlpathits.github.io/scad-tool/](https://nlpathits.github.io/scad-tool/)
+Visualized example results can be found at [https://nlpathits.github.io/scad-tool/](https://nlpathits.github.io/scad-tool/) (Use 'Open in new tab/window')
